@@ -1,6 +1,6 @@
 ---
 name: dev-doc
-description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方案文档：需求归一化 → 需求驱动扫描代码库 + 规范域动态发现 → 提纲 checkpoint → 核心设计 checkpoint（轻方案跳过）→ 展开章节 → 终审 checkpoint。支持重量分级（轻/中/重）自适应 checkpoint 数和章节深浅。产物为 Markdown 文档。用户要"写技术方案/技术设计/方案文档/design doc"时使用。
+description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方案文档：需求归一化 → 需求驱动扫描代码库 + 规范域动态发现 → 提纲 checkpoint → 核心设计 checkpoint（轻方案跳过）→ 展开章节 → 终审 checkpoint。支持重量分级（轻/中/重）自适应 checkpoint 数（轻=2，中/重=3）和章节深浅。产物为 Markdown 文档。用户要"写技术方案/技术设计/方案文档/design doc"时使用。
 ---
 
 # dev-doc：技术方案写作 Skill
