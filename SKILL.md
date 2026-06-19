@@ -260,3 +260,157 @@ description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方�
 - **轻** → 跳过 Phase 3，直接 Phase 4
 - **中** → Phase 3 验"改动的核心设计"
 - **重** → Phase 3 验"全局架构骨架"
+
+---
+
+## Phase 3：核心设计/架构 checkpoint（轻方案跳过）
+
+这是技术方案的"风险探针"——用最低成本的第一次落地，暴露后面所有可能的设计漏洞。**轻方案跳过此阶段**。
+
+### 3.1 加载评审依据
+
+加载 [`references/anti-ai-signs.md`](references/anti-ai-signs.md)，作为 SubAgent 评审的对照清单。
+
+### 3.2 验收内容（按重量区分）
+
+**中方案**：验收"这次改动"的核心设计——
+- 改动的核心接口设计 / 数据模型 / 状态机
+- 每个关键决策带"考虑过 X，因为 Y 没选"（呼应 anti-ai-signs 第 2 条）
+
+**重方案**：验收"全局"架构——
+- 整体架构图（mermaid，见 `mermaid-checklist.md`）
+- 模块职责划分
+- 核心选型理由 + trade-off
+- 数据流
+
+### 3.3 SubAgent 三视角评审
+
+开 SubAgent 做独立评审（可行性 / 风险 / 成本三视角）：
+
+| 视角 | 评什么 | 典型问题 |
+|---|---|---|
+| 可行性 | 技术上能不能做 | 选型的依赖有没有？团队技术栈支持吗？有没有未验证的假设？ |
+| 风险 | 会出什么事 | 数据一致性风险？并发风险？回滚不了的场景？ |
+| 成本 | 值不值得 | 工时合理吗？有没有过度设计？维护成本？ |
+
+**评审输出铁律**：必须以**问题清单**形式给出，不是"通过/不通过"。每条命中要指出——在哪个决策、具体什么问题、应该怎么改。
+
+**评审结果不落盘**，直接在对话里给用户看。
+
+### 3.4 用户确认 + 落盘关键决策
+
+用户验收通过后，把核心架构/选型决策写入 `plan.md` 的"关键决策"区块：
+
+```markdown
+## 关键决策
+- 决策1：选用 X 而非 Y，因为 <理由>，代价是 <明确点出>
+- 决策2：...
+```
+
+**Phase 4 展开章节时必须回看这个区块**，保证章节不漂移。
+
+---
+
+## Phase 4：展开章节
+
+按 plan.md 的章节规划，逐章写技术方案文档。核心机制是**按章节按域加载**。
+
+### 4.1 按域加载规范
+
+**每写一章，先查 `plan.md` 的"章节规划 + 规范域关联"表**：
+- 表里标注了这一章需要加载哪些 `dev-doc/conventions/<domain>.md`
+- 加载对应规范文件后，按规范写这一章
+- 写图表章节时，加载 [`references/mermaid-checklist.md`](references/mermaid-checklist.md)
+
+### 4.2 写作约束
+
+1. **所有章节必须回看 `plan.md` 的"关键决策"区块** —— 防止章节间漂移
+2. **章节深浅按 `plan.md` 的章节规划表**（深写/正常/薄写/跳过），见所选配方的"章节深浅表"
+3. **数据模型 / 接口契约引用 [`_backend-domain`](references/recipes/_backend-domain.md) 的规范**（DDL/接口/状态机的写法）
+4. **写到一半发现 plan.md 的决策有问题** —— 停下来，回到 Phase 3 重新确认决策，不要自作主张改方向
+
+### 4.3 章节生成顺序
+
+按配方定义的章节顺序逐章写（generic-medium 的 9 节 / multi-task 的按子任务 / greenfield 的架构优先）。每章写完做一次自检——对照该章应该覆盖的内容点。
+
+### 4.4 产物文件
+
+最终文档写到 `dev-doc/tasks/<feature>/<feature>技术方案.md`，包含：
+- 配方定义的全部章节（按重量决定深浅）
+- 末尾的"实现速查"索引节（给编码 AI 快速定位硬契约）
+
+---
+
+## Phase 5：终审 checkpoint
+
+全文写完后，做最终评审。**必须停下来等用户确认交付**。
+
+### 5.1 SubAgent 多视角终审
+
+开 SubAgent 做（逻辑自洽 / 风险完整 / 可实现）三视角终审：
+- 加载 [`references/anti-ai-signs.md`](references/anti-ai-signs.md) 作为依据
+- 评审输出**问题清单**（不落盘）
+- 拿到结论后**先按问题项修复**，再向用户汇报
+
+### 5.2 终审对照清单
+
+逐项核对：
+
+| 核对项 | 检查什么 |
+|---|---|
+| 反 AI 味清单 | 逐条对照 anti-ai-signs.md 的 10 条，命中的修正 |
+| 待确认项闭环 | `requirement.md` 里的待确认项是否都已解决 |
+| 数据量线索 | `requirement.md` 的数据量线索是否都体现在方案里（分页/批量/异步的依据）|
+| mermaid 自检 | 所有 mermaid 代码块跑一遍 mermaid-checklist.md 的自检 |
+| 章节深浅一致性 | plan.md 章节规划表的"深写"章节是否真的深写了 |
+
+### 5.3 交付 checkpoint（★硬节点，必须停）
+
+终审改完后，停下来让用户确认交付。**不要静默交付**。
+
+交付决策（用 `AskQuestion`）：
+- 通过 · 交付当前文档
+- 局部修改 · 我会列出具体修哪里
+- 先停一停 · 我要再看看
+
+用户确认通过后，更新 `plan.md` 状态为"已完成"，任务结束。
+
+---
+
+## 全局约束（贯穿所有 Phase）
+
+### 最小切片修复
+
+任何 checkpoint 用户提出修改、或 SubAgent 评审暴露问题时，**只改出问题的部分**：
+
+| 修改类型 | 修复范围 |
+|---|---|
+| 提纲级（范围/重量/章节结构错）| 只改 plan.md，重做受影响章节 |
+| 核心设计级（架构/选型错）| 改 plan.md 的"关键决策"，重做依赖该决策的章节 |
+| 章节级（某章内容错）| 只改该章，不动其他 |
+| 细节级（某接口/字段错）| 只改该处 |
+
+**修复铁律**：修复前**必须先声明影响范围** —— "这个修改会影响 X、Y 章节，Z 章节不动"，让用户知道修复的爆炸半径。**禁止静默大面积重写**。
+
+### 禁止静默替用户选择
+
+每个 checkpoint（Phase 2 / Phase 3 / Phase 5）的所有决策项**必须每项独立列出 + 等用户答复**。Agent 可以推荐（"我推荐 X，因为…"），**不能**说"已经替你定了 X，如果不对告诉我"。优先用 `AskQuestion` 工具（每个决策一个独立 question）。
+
+---
+
+## Reference 加载总表（何时读什么）
+
+| 阶段 | 加载什么 | 来源 |
+|---|---|---|
+| Phase 0 | 需求（原始输入） | 用户给 |
+| Phase 1 | 影响范围 + 现状 | 代码库扫描 |
+| Phase 1 | 规范域发现方法 | [`convention-extraction.md`](references/convention-extraction.md) |
+| Phase 1 | 规范域 | 扫描推断 + 用户确认 → `dev-doc/conventions/` |
+| Phase 2 | 配方（generic-medium/multi-task/greenfield） | [`references/recipes/`](references/recipes/) |
+| Phase 2 | 后端领域决策点 | [`_backend-domain.md`](references/recipes/_backend-domain.md) |
+| Phase 3 | 反 AI 味清单 | [`anti-ai-signs.md`](references/anti-ai-signs.md) |
+| Phase 4（每章）| 该章节关联的规范域 | `dev-doc/conventions/<domain>.md` |
+| Phase 4（图表章）| mermaid 规范 | [`mermaid-checklist.md`](references/mermaid-checklist.md) |
+| Phase 5 | 反 AI 味清单 + 终审视角 | [`anti-ai-signs.md`](references/anti-ai-signs.md) |
+
+> **长会话里 agent 容易遗忘原则** —— Phase 4 会重复写 N 个章节，**每次开工前回看**所选配方 + `_backend-domain.md` + 当前章节关联的 conventions。
