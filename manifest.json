@@ -1,0 +1,13 @@
+{
+  "name": "dev-doc",
+  "version": "0.1.0",
+  "category": "Documentation / Engineering",
+  "description": "通用技术方案写作 skill。借鉴 garden-skills 的 harness 工程思想，落地 6 层机制（上下文管理/工具系统/执行编排/状态记忆/评估观测/约束恢复）+ 重量分级（轻/中/重）+ 规范域动态发现。支持需求驱动扫描代码库、3 个 checkpoint、反 AI 味清单。产物为 Markdown 技术方案文档。",
+  "homepage": "",
+  "compat": [
+    "claude-code",
+    "codex-cli",
+    "gemini-cli",
+    "opencode"
+  ]
+}
