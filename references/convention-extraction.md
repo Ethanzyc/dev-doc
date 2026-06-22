@@ -136,3 +136,5 @@ YYYY-MM-DD
 5. **约定要具体** —— "命名要规范"不是约定，"表名以 t_ 开头"才是。模糊的约定无法指导后续设计。
 
 6. **用户修正后要更新缓存** —— 如果用户确认时改了某条约定，立即更新 `dev-doc/conventions/<domain>.md` 的内容，后续章节加载的就是修正后的版本。
+
+7. **domain 名 = 文件名 slug，定下不改** —— 规范域文件名（如 `sql.md`、`interface.md`）就是该域的 slug，`plan.md` 的"章节规划 + 规范域关联"表用**同一个 slug** 引用。命名规则：小写英文 + 短横线（`sql` / `interface` / `error-code` / `project-structure`）。一旦命名定下，不要中途改名——否则 Phase 4 按域加载会对不上文件、静默失败。
