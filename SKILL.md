@@ -45,6 +45,8 @@ description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方�
 2. 检查 `dev-doc/tasks/<feature>/` 是否存在
    - 不存在 → 创建该目录，开始新任务
    - 存在 → 询问用户"继续这个任务还是新建"
+     - 选「继续」→ 先读 `requirement.md` + `plan.md` 恢复上下文，按 plan.md 的"任务元信息-状态"和已落地的章节判断卡在哪个 Phase，从断点续做（不要从头重做）
+     - 选「新建」→ 换一个 feature 名重新建目录
 3. 后续所有产物都落在 `dev-doc/tasks/<feature>/` 下
 
 ---
@@ -191,6 +193,8 @@ description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方�
 
 所有配方共享后端领域决策点 [`_backend-domain`](references/recipes/_backend-domain.md)（数据量估算 / 并发与一致性 / 事务边界 / 幂等性 / 状态设计 + 工时评估）。
 
+> **适用边界**：本 skill 现阶段面向后端服务方案。用于前端 / 数据 / 算法方案时，配方章节结构通用，但 [`_backend-domain`](references/recipes/_backend-domain.md) 的数据模型 / 接口 / 状态机 / 并发事务等决策点**按需取用**，不相关项不强制。
+
 ### 2.3 写 plan.md（完整结构）
 
 此阶段产出完整 `plan.md`：
@@ -237,7 +241,7 @@ description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方�
 
 ### 2.4 提纲 checkpoint（★硬节点，必须停）
 
-用 `AskQuestion` 工具，**每项独立确认，禁止打包成 yes/no**。可推荐，不能跳过。
+**逐项独立确认，禁止打包成 yes/no**——每个决策一个问题，给推荐但由用户拍板，不能偷渡默认值。
 
 确认 4 项：
 
@@ -368,7 +372,7 @@ description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方�
 
 终审改完后，停下来让用户确认交付。**不要静默交付**。
 
-交付决策（用 `AskQuestion`）：
+交付决策（逐项询问）：
 - 通过 · 交付当前文档
 - 局部修改 · 我会列出具体修哪里
 - 先停一停 · 我要再看看
@@ -394,7 +398,7 @@ description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方�
 
 ### 禁止静默替用户选择
 
-每个 checkpoint（Phase 2 / Phase 3 / Phase 5）的所有决策项**必须每项独立列出 + 等用户答复**。Agent 可以推荐（"我推荐 X，因为…"），**不能**说"已经替你定了 X，如果不对告诉我"。优先用 `AskQuestion` 工具（每个决策一个独立 question）。
+每个 checkpoint（Phase 2 / Phase 3 / Phase 5）的所有决策项**必须每项独立列出 + 等用户答复**。Agent 可以推荐（"我推荐 X，因为…"），**不能**说"已经替你定了 X，如果不对告诉我"。逐项询问（Claude Code 中用 `AskUserQuestion`，每个决策一个独立 question；其他 CLI 用对应的提问机制）。
 
 ---
 
