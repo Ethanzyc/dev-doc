@@ -15,7 +15,7 @@
 
 - **6 Phase 流程**：需求归一化 → 需求驱动扫描 + 规范域发现 → 提纲 checkpoint → 核心设计 checkpoint → 展开章节 → 终审 checkpoint
 - **重量分级**（轻/中/重）自适应 checkpoint 数和章节深浅，小改动不被过度设计
-- **规范域动态发现**：从代码库扫描推断团队工程约定，用户确认后缓存累积
+- **规范域动态发现 + 规范源复用**：优先探测并复用项目已有约定源（`.claude/rules/` 等）；无源时才从代码扫描推断、用户确认后累积到 `dev-doc/conventions/`
 - **反方案 AI 味清单**：10 条反模式清单，终审逐条对照
 - **需求对齐节点**：PRD 质量低时自动生成业务流程图，防止理解偏差
 
@@ -27,23 +27,24 @@
 帮我写一个 voucher-rule 模块的技术方案
 ```
 
-skill 会在当前项目下创建 `dev-doc/` 目录承载所有产物：
+skill 会在当前项目下创建 `dev-doc/` 目录承载产物：
 
 ```
 <你的项目>/
 └── dev-doc/
-    ├── conventions/              # 项目工程规范（跨任务累积，团队共享）
+    ├── conventions/              # 规范源之一：项目无现成约定源时产出；否则复用项目已有源
     │   ├── sql.md
-    │   ├── interface.md
     │   └── ...
     └── tasks/
         └── voucher-rule/         # 每个需求一个目录，支持多任务并行
             ├── requirement.md    # 需求归一化
-            ├── plan.md           # 决策记录
+            ├── plan.md           # 决策记录（含规范源声明）
             └── voucher-rule技术方案.md  # 最终产物
 ```
 
-> **建议**：把 `dev-doc/` 纳入 git，团队共享 conventions。`dev-doc/tasks/<feature>/` 下的 requirement.md / plan.md 是过程产物，但保留可追溯决策。
+> **conventions 是否产出看项目**：Phase 1 先探测项目是否已有约定源（`.claude/rules/` 等）。**有 → 复用，不另建 `dev-doc/conventions/`**（只把扫描到的新约定作增量补进去）；**无 → 从零累积到 `dev-doc/conventions/`**。
+>
+> **建议**：把 `dev-doc/` 纳入 git。复用模式下约定源（如 `.claude/rules/`）天然团队共享；从零模式下 `dev-doc/conventions/` 越用越全。`dev-doc/tasks/<feature>/` 下的 requirement.md / plan.md 是过程产物，但保留可追溯决策。
 
 ## 6 Phase 流程概览
 

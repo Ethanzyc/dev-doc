@@ -1,6 +1,8 @@
 # dev-doc Skill Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+>
+> **⚠️ 演进说明（2026-06-22）**：本 plan 记录 v0.1 实现。其中 Task 8 / 10 / 11 描述的"规范域动态发现 → 写 `dev-doc/conventions/`"已演进为**规范源声明制**（见 SKILL.md Phase 1.3：探测项目约定源 → 复用/从零两模式，`conventions/` 不再无条件产出）。本 plan 作为 v0.1 实现记录保留，后续演进以 SKILL.md 为准。
 
 **Goal:** 构建一个通用的技术方案写作 skill（`dev-doc`），借鉴 garden-skills 的 harness 工程思想，落地 6 层 harness + 重量分级 + 规范域动态发现。
 

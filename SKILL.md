@@ -5,35 +5,36 @@ description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方�
 
 # dev-doc：技术方案写作 Skill
 
-通用技术方案写作 skill，借鉴 garden-skills 的 harness 工程思想，落地 6 层机制（上下文管理/工具系统/执行编排/状态记忆/评估观测/约束恢复）+ 重量分级 + 规范域动态发现。
+通用技术方案写作 skill，借鉴 garden-skills 的 harness 工程思想，落地 6 层机制（上下文管理/工具系统/执行编排/状态记忆/评估观测/约束恢复）+ 重量分级 + 规范源复用 + 规范域动态发现。
 
 ## 核心机制
 
 - **6 Phase 流程**：需求归一化 → 扫描+规范发现 → 提纲 checkpoint → 核心设计 checkpoint → 展开章节 → 终审 checkpoint
 - **重量分级**（轻/中/重）自适应 checkpoint 数和章节深浅
-- **规范域动态发现**：从代码库扫描推断团队约定，用户确认后缓存累积
+- **规范域动态发现 + 规范源复用**：优先探测并复用项目已有约定源（`.claude/rules/` 等）；无源时从代码扫描推断、用户确认后累积
 - **反方案 AI 味清单**：终审逐条对照 10 条反模式
 - **需求对齐节点**：PRD 质量低时自动生成业务流程图，防止理解偏差
 
 ## ⚠️ 目录副作用告知（执行任何任务前向用户说明）
 
-本 skill 会在用户项目下创建 `dev-doc/` 目录承载所有产物：
+本 skill 会在用户项目下创建 `dev-doc/` 目录承载产物：
 
 ```
 <用户项目>/
 └── dev-doc/
-    ├── conventions/              # 项目工程规范（跨任务累积，团队共享）
+    ├── conventions/              # 规范源之一：仅当项目无现成约定源时产出（否则复用项目已有源，见下）
     │   ├── sql.md
-    │   ├── interface.md
     │   └── ...
     └── tasks/
         └── <feature>/            # 每个需求一个目录，支持多任务并行
             ├── requirement.md    # 需求归一化
-            ├── plan.md           # 决策记录
+            ├── plan.md           # 决策记录（含规范源声明）
             └── <feature>技术方案.md  # 最终产物
 ```
 
-**建议**：把 `dev-doc/` 纳入 git 团队共享 conventions（规范越用越全）。`tasks/<feature>/` 下的 requirement.md / plan.md 是过程产物，但保留可追溯决策。
+**规范源模式（conventions 是否产出看项目现状）**：Phase 1 先探测项目是否已有团队约定源——`.claude/rules/`、`docs/conventions/`、`CLAUDE.md` 规范段等。**有 → 复用为规范源，`dev-doc/conventions/` 不强制产出**（避免与已有约定重复打架）；扫描中发现"源里没收的新约定"才作为增量补到 `dev-doc/conventions/`。**无 → 规范源就是 `dev-doc/conventions/`，从零发现并累积。** 规则见 Phase 1.3。
+
+**建议**：把 `dev-doc/` 纳入 git。复用模式下约定源（如 `.claude/rules/`）天然团队共享；从零模式下 `dev-doc/conventions/` 越用越全。`tasks/<feature>/` 下的 requirement.md / plan.md 是过程产物，但保留可追溯决策。
 
 ---
 
@@ -146,18 +147,42 @@ description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方�
 2. **阶段 B 严禁越界** —— 不能因为"顺手看到个相关文件"就扩大范围。范围发散是方案跑偏的常见根源。
 3. **范围确认不加独立 checkpoint** —— 影响范围是 Phase 2 提纲的一部分，搭车提纲 checkpoint 确认。用户在提纲 checkpoint 觉得范围错了，可以推翻。
 
-### 1.3 规范域动态发现
+### 1.3 规范域动态发现（先探测规范源，再分模式）
 
-阶段 B 深度分析时，**加载 [`references/convention-extraction.md`](references/convention-extraction.md)** 学习发现方法，然后：
+**先加载 [`references/convention-extraction.md`](references/convention-extraction.md)** 学习发现方法，然后按下面的流程走。
+
+#### 1.3.0 探测项目规范源（阶段 A 之前先做）
+
+**目的**：很多项目已有团队约定沉淀（如 `.claude/rules/`），skill 不该无视它另起炉灶重复造。先探测，命中即复用。
+
+按顺序探测（命中即停）：
+
+| 优先级 | 候选规范源 | 判定 |
+|---|---|---|
+| 1 | `.claude/rules/*.md` | 目录存在且非空 |
+| 2 | `docs/conventions/` 或 `docs/规范/` | 目录存在且非空 |
+| 3 | `CLAUDE.md` / `AGENTS.md` | 含可识别的"规范/约定"章节 |
+| 4 | （以上都无）| 项目无现成约定源 |
+
+探测结果决定**规范源模式**，写入 `plan.md`：
+
+- **命中 1-3 → 复用模式**：规范源 = 该目录（如 `.claude/rules/`）。本次任务的"规范域关联"指向规范源文件，**不另建 `dev-doc/conventions/`**。扫描中若发现"规范源没收录、但本项目确实在用"的新约定，作为**增量**补写到 `dev-doc/conventions/<domain>.md`，文件头标注"为 `<规范源>` 的增量补充，不覆盖源"。plan.md 声明：`规范源：.claude/rules/（复用）`。
+- **命中 4 → 从零模式**：规范源 = `dev-doc/conventions/`（本项目无现成约定，skill 来建）。走下方完整发现流程，写入 `dev-doc/conventions/<domain>.md`。plan.md 声明：`规范源：dev-doc/conventions/（从零）`。
+
+> **为什么先探测再发现**：复用模式直接拿现成约定，准且省力；从零模式才需 skill 推断。跳过探测 = 要么无视团队规范，要么和已有约定重复。
+
+#### 1.3.1 发现流程（两种模式共用，阶段 B 深度分析时做）
+
+**从零模式**做完整发现；**复用模式**只做增量发现（只抓规范源没覆盖的新约定）。方法见 convention-extraction.md：
 
 1. 对每个被读的代码区域，提取"这里体现了什么工程约定"
 2. 聚类成规范域（**不预设清单**，相似归一类、不重叠）
-3. 写入 `dev-doc/conventions/<domain>.md`（带时间戳 + 来源文件 + 置信度两档：可信/待确认）
+3. 写入规范源对应位置（从零模式写 `dev-doc/conventions/<domain>.md`；复用模式的增量也写 `dev-doc/conventions/<domain>.md` 并标注增量，规范源文件本身不动）
 4. 集中展示给用户确认/修正
 
 **常见规范域提示**（只是提示，实际域由扫描结果决定）：命名 / 分层架构 / 接口 / SQL与数据模型 / 日志 / 异常处理 / 配置管理。
 
-**关键**：提取的是"现状推测"，不是真规范。**必须用户确认后才采信**。用户修正的条目立即更新 conventions 文件。
+**关键**：提取的是"现状推测"，不是真规范。**必须用户确认后才采信**。用户修正的条目立即更新 conventions 文件。**复用模式下，规范源文件本身（如 `.claude/rules/sql.md`）是已确认的团队约定，直接采信、不再让用户确认一遍**——只对本次新发现的增量走确认。
 
 ### 1.4 数据量线索：必须问用户，不许假设
 
@@ -235,6 +260,8 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 - 判定：<重量>（依据：...）
 
 ## 章节规划 + 规范域关联
+> 规范源：`<.claude/rules/ 或 dev-doc/conventions/>`（复用 / 增量 / 从零）—— Phase 1.3.0 探测得出，Phase 2 checkpoint 确认
+
 | 章节 | 深浅（重量决定）| 关联规范域 |
 | 数据模型 | 深写 | sql |
 | 接口契约 | 深写 | interface, error-code |
@@ -253,7 +280,7 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 
 **逐项独立确认，禁止打包成 yes/no**——每个决策一个问题，给推荐但由用户拍板，不能偷渡默认值。
 
-确认 4 项：
+确认 5 项：
 
 | 确认项 | 内容 |
 |---|---|
@@ -261,6 +288,7 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 | 重量判定 | 轻/中/重 + 依据 + 后续流程走向 |
 | 章节规划 | 哪些章节深写/薄写/跳过 |
 | 关键设计方向 | 1-2 句话点明方案主线（不展开细节）|
+| 规范源声明 | 规范源在哪、复用/增量/从零（防静默：明确本次约定从哪来，用户可推翻规范源选择）|
 
 **禁止行为**：
 - ❌ 把多项打包成"全部 OK 吗？"
@@ -337,10 +365,10 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 ### 4.1 按域加载规范
 
 **每写一章，先查 `plan.md` 的"章节规划 + 规范域关联"表**：
-- 表里标注了这一章需要加载哪些 `dev-doc/conventions/<domain>.md`
+- 表里标注了这一章关联哪些规范文件（**路径随规范源模式而定**：复用模式下可能是 `.claude/rules/sql.md`，从零模式下是 `dev-doc/conventions/sql.md`）
 - 加载对应规范文件后，按规范写这一章
 - 写图表章节时，加载 [`references/mermaid-checklist.md`](references/mermaid-checklist.md)
-- **若 `conventions/<domain>.md` 不存在**（首次使用 / 该项目此域无规范）→ 按通用最佳实践写，并在 `plan.md` 标注"该项目无 `<domain>` 团队规范，采用通用实践"。不要因此卡住或报错。
+- **若表里关联的规范文件不存在**（规范源此域无收录 / 首次使用）→ 按通用最佳实践写，并在 `plan.md` 标注"该项目无 `<domain>` 团队规范，采用通用实践"。不要因此卡住或报错。
 
 ### 4.2 写作约束
 
@@ -430,13 +458,14 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 |---|---|---|
 | Phase 0 | 需求（原始输入） | 用户给 |
 | Phase 1 | 影响范围 + 现状 | 代码库扫描 |
+| Phase 1 | 规范源 | 探测 `.claude/rules/` 等 → plan.md 声明（复用 / 增量 / 从零）|
 | Phase 1 | 规范域发现方法 | [`convention-extraction.md`](references/convention-extraction.md) |
-| Phase 1 | 规范域 | 扫描推断 + 用户确认 → `dev-doc/conventions/` |
+| Phase 1 | 规范域 | 扫描推断 + 用户确认 → 规范源（复用模式只把增量写进 `dev-doc/conventions/`）|
 | Phase 2 | 配方（generic-medium/multi-task/greenfield） | [`references/recipes/`](references/recipes/) |
 | Phase 2 | 后端领域决策点 | [`_backend-domain.md`](references/recipes/_backend-domain.md) |
 | Phase 3 | 反 AI 味清单 | [`anti-ai-signs.md`](references/anti-ai-signs.md) |
-| Phase 4（每章）| 该章节关联的规范域 | `dev-doc/conventions/<domain>.md` |
+| Phase 4（每章）| 该章节关联的规范域 | 规范源对应文件（复用/从零模式见 1.3.0）|
 | Phase 4（图表章）| mermaid 规范 | [`mermaid-checklist.md`](references/mermaid-checklist.md) |
 | Phase 5 | 反 AI 味清单 + 终审视角 | [`anti-ai-signs.md`](references/anti-ai-signs.md) |
 
-> **长会话里 agent 容易遗忘原则** —— Phase 4 会重复写 N 个章节，**每次开工前回看**所选配方 + `_backend-domain.md` + 当前章节关联的 conventions。
+> **长会话里 agent 容易遗忘原则** —— Phase 4 会重复写 N 个章节，**每次开工前回看**所选配方 + `_backend-domain.md` + 当前章节关联的规范源。

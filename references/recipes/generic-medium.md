@@ -31,7 +31,7 @@
 
 #### 3.2 数据模型
 - DDL + 索引 + 约束
-- **遵循 `_backend-domain.md` 的 DDL 规范**（命名/主键/字段类型走团队规范，从 `conventions/sql.md` 加载）
+- **遵循 `_backend-domain.md` 的 DDL 规范**（命名/主键/字段类型走团队规范，从规范源加载，Phase 1.3.0 探测；可能是 `conventions/sql.md` 或 `.claude/rules/sql.md`）
 - 每个索引说明服务哪个查询
 - DDL 用代码块包裹
 
@@ -66,7 +66,7 @@
 
 ### 6. 测试方案
 
-- 引用团队测试规范（如 `.claude/rules/test.md` 或从 `conventions/` 加载）
+- 引用团队测试规范（走规范源：`.claude/rules/test.md` 或 `conventions/test.md`）
 - 单元测试：测试类 + 覆盖场景
 - 集成测试：测试场景 + 数据准备方式
 - **具体**，不写"编写单元测试保证质量"（呼应 `anti-ai-signs.md` 第 10 条）

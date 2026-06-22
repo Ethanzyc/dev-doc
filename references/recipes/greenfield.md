@@ -76,8 +76,8 @@
 ### 3. 工程结构
 
 - 包结构 / 分层规范 / 命名规范
-- **引用动态发现的 `conventions/project-structure.md`**（这是项目级规范，强相关）
-- 如果是新项目还没规范，在这里**定义**规范（用户确认后写入 conventions）
+- **引用项目结构规范源**（Phase 1.3.0 探测；可能是 `conventions/project-structure.md` 或 `.claude/rules/` 下对应文件，这是项目级规范，强相关）
+- 如果是新项目还没规范，在这里**定义**规范（用户确认后写入 `dev-doc/conventions/`）
 
 ### 4. 数据模型
 
