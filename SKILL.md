@@ -47,6 +47,7 @@ description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方�
    - 不存在 → 创建该目录，开始新任务
    - 存在 → 询问用户"继续这个任务还是新建"
      - 选「继续」→ 先读 `requirement.md` + `plan.md` 恢复上下文，按 plan.md 的"任务元信息-状态"和已落地的章节判断卡在哪个 Phase，从断点续做（不要从头重做）
+       - 若 `plan.md` 尚不存在（中断发生在 Phase 0 / Phase 1 早期，plan.md 最早在 Phase 1 阶段 A 才创建）：`requirement.md` 存在且其待确认项已闭环 → 直接从 Phase 1 开始；否则从 Phase 0 开始
      - 选「新建」→ 换一个 feature 名重新建目录
 3. 后续所有产物都落在 `dev-doc/tasks/<feature>/` 下
 
@@ -230,6 +231,8 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 
 **判定规则**：任一维度达到"重" → 整体重；否则任一"中" → 中；全"轻" → 轻。
 
+**例外：multi-task 配方最低判"中"**——多个子任务合在一个需求里，子任务间的 DDL 执行顺序 / 上线依赖 / 回滚耦合风险必须过 Phase 3 验收，不适用"轻 → 跳过 Phase 3"。
+
 把每个维度的命中情况写入 `plan.md` 的"重量判定依据"，让用户能看到判定理由。
 
 ### 2.2 选择配方
@@ -241,6 +244,7 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 | 新模块 / 技改 / 重构 / 对外提供接口 | [`generic-medium`](references/recipes/generic-medium.md) |
 | 多个小优化合在一个需求里 | [`multi-task`](references/recipes/multi-task.md) |
 | 新项目（从零开始）| [`greenfield`](references/recipes/greenfield.md) |
+| 其他类型（含单点小改动等轻方案）| [`generic-medium`](references/recipes/generic-medium.md)（兜底，按"轻"深浅薄写） |
 
 所有配方共享后端领域决策点 [`_backend-domain`](references/recipes/_backend-domain.md)（数据量估算 / 并发与一致性 / 事务边界 / 幂等性 / 状态设计 + 工时评估）。
 
@@ -419,6 +423,8 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 
 ### 5.2 终审对照清单
 
+**执行者是主 agent，不是 SubAgent**——SubAgent 终审（5.1）只验文档本身（逻辑自洽 / 风险 / 可实现），它没有对话上下文，做不了"用户确认过什么"的判断。本清单中"静默假设清零""待确认项闭环""数据量线索"三项依赖对话历史，**只能主 agent 核对**。
+
 逐项核对：
 
 | 核对项 | 检查什么 |
@@ -483,6 +489,6 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 | Phase 3 | 反 AI 味清单 | [`anti-ai-signs.md`](references/anti-ai-signs.md) |
 | Phase 4（每章）| 该章节关联的规范域 | 规范源对应文件（复用/从零模式见 1.3.0）|
 | Phase 4（图表章）| mermaid 规范 | [`mermaid-checklist.md`](references/mermaid-checklist.md) |
-| Phase 5 | 反 AI 味清单 + 终审视角 | [`anti-ai-signs.md`](references/anti-ai-signs.md) |
+| Phase 5 | 反 AI 味清单 + 终审视角 + mermaid 自检 | [`anti-ai-signs.md`](references/anti-ai-signs.md)、[`mermaid-checklist.md`](references/mermaid-checklist.md) |
 
 > **长会话里 agent 容易遗忘原则** —— Phase 4 会重复写 N 个章节，**每次开工前回看**所选配方 + `_backend-domain.md` + 当前章节关联的规范源。
