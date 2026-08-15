@@ -47,6 +47,16 @@ skill 会在当前项目下创建 `dev-doc/` 目录承载产物：
 >
 > **建议**：把 `dev-doc/` 纳入 git。复用模式下约定源（如 `.claude/rules/`）天然团队共享；从零模式下 `dev-doc/conventions/` 越用越全。`dev-doc/tasks/<feature>/` 下的 requirement.md / plan.md 是过程产物，但保留可追溯决策。
 
+## 兼容性
+
+面向支持 Agent Skills 的 CLI agent（Claude Code / Codex CLI / Gemini CLI / OpenCode）。运行环境要求（目录读写、grep/glob 扫描、SubAgent 派发）声明在 `SKILL.md` frontmatter 的 `compatibility` 字段——这是 Agent Skills 规范的标准位置，遵循规范的运行时可直接读取。
+
+## 测试
+
+本 skill 有一套基于对照实验的回归测试方法（3 条路径：轻方案 / 低质量需求对齐 / multi-task 合并，共 21 条断言，带 skill vs 裸跑对照）。**测试资产不入仓库**：用例和 fixture 在本地 `evals/`（已 gitignore），运行产物在 `../dev-doc-workspace/`。
+
+2026-08 iteration-1 基线：带 skill 断言通过率 100%（21/21），裸跑 47.6%（10/21）。增益集中在过程纪律（工时评估、决策可追溯、需求归一化），耗时约为裸跑的 2-5 倍。
+
 ## 6 Phase 流程概览
 
 ```mermaid
@@ -95,7 +105,7 @@ flowchart TD
 | ② 工具系统 | Agent 能动手做什么 | grep / glob / read + WebSearch + mermaid；不跑 PoC | 散见各 Phase |
 | ③ 执行编排 | 下一步做什么、顺序 | 重量分级（轻/中/重）+ 自适应 checkpoint（轻=2，中/重=3）+ Phase 3 当"风险探针" | 2.1 / 2.5 / 3 |
 | ④ 状态记忆 | 决策如何跨阶段保持 | 极简 `plan.md`（"关键决策"区块，Phase 4 每章回看防漂移）+ 按任务目录隔离 | 前置 / 2.3 / 3.4 |
-| ⑤ 评估观测 | 怎么知道好不好 | 冷节点开 SubAgent 三视角（可行性 / 风险 / 成本）；输出**问题清单**而非"通过/不通过"；不落盘 | 3.3 / 5.1 |
+| ⑤ 评估观测 | 怎么知道好不好 | 冷节点开 SubAgent 三视角（可行性 / 风险 / 成本）；输出**问题清单**而非"通过/不通过"；不落盘；无 SubAgent 派发能力的环境（如嵌套 agent）降级为主 agent 逐视角自评，偏差记入 plan.md | 3.3 / 5.1 |
 | ⑥ 约束恢复 | 防平庸、跑偏怎么修 | 反 AI 味 10 条 + 静默假设清零 + 最小切片修复 + 修前声明"爆炸半径" | 5.2 / 全局约束 |
 
 ### 三个失败模式由哪几层覆盖
