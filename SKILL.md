@@ -1,11 +1,12 @@
 ---
 name: dev-doc
-description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方案文档：需求归一化 → 需求驱动扫描代码库 + 规范域动态发现 → 提纲 checkpoint → 核心设计 checkpoint（轻方案跳过）→ 展开章节 → 终审 checkpoint。支持重量分级（轻/中/重）自适应 checkpoint 数（轻=2，中/重=3）和章节深浅。产物为 Markdown 文档。用户要"写技术方案/技术设计/方案文档/design doc"时使用。
+description: 通用技术方案写作 skill。按 6 Phase 流程生成技术方案文档：需求归一化 → 需求驱动扫描代码库 + 规范域动态发现 → 提纲 checkpoint → 核心设计 checkpoint（轻方案跳过）→ 展开章节 → 终审 checkpoint。支持重量分级（轻/中/重）自适应 checkpoint 数和章节深浅。产物为 Markdown 文档。用户要"写技术方案/技术设计/方案文档/design doc/技术评审文档/RFC"或说"出个方案/写个 HLD、LLD"时使用。
+compatibility: 需支持 Agent Skills 的 CLI agent（Claude Code / Codex CLI / Gemini CLI / OpenCode）；需可读写用户项目目录（创建 dev-doc/）、可执行 grep/glob 扫描、可开 SubAgent 做独立评审。
 ---
 
 # dev-doc：技术方案写作 Skill
 
-通用技术方案写作 skill，借鉴 garden-skills 的 harness 工程思想，落地 6 层机制（上下文管理/工具系统/执行编排/状态记忆/评估观测/约束恢复）+ 重量分级 + 规范源复用 + 规范域动态发现。
+面向后端服务的技术方案写作 skill，按 6 Phase 流程产出 Markdown 方案文档。核心机制概览如下，细节在各 Phase 展开（设计思路沉淀见仓库 README）。
 
 ## 核心机制
 
@@ -361,13 +362,7 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 
 ### 3.3 SubAgent 三视角评审
 
-开 SubAgent 做独立评审（可行性 / 风险 / 成本三视角）：
-
-| 视角 | 评什么 | 典型问题 |
-|---|---|---|
-| 可行性 | 技术上能不能做 | 选型的依赖有没有？团队技术栈支持吗？有没有未验证的假设？ |
-| 风险 | 会出什么事 | 数据一致性风险？并发风险？回滚不了的场景？ |
-| 成本 | 值不值得 | 工时合理吗？有没有过度设计？维护成本？ |
+开 SubAgent 做独立评审（可行性 / 风险 / 成本三视角，各视角的评审要点见 [`anti-ai-signs.md`](references/anti-ai-signs.md) 末尾的视角说明表）。**SubAgent 没有 skill 上下文，无法自行加载清单文件，必须把 anti-ai-signs 清单全文直接注入 prompt**（该文件的 prompt 骨架里已预留粘贴位）。运行环境无 SubAgent 派发能力时（如嵌套 agent 环境），降级为主 agent 逐视角自评——输出仍是问题清单、评审纪律不变，并在 plan.md 记录这条环境偏差。
 
 **评审输出铁律**：必须以**问题清单**形式给出，不是"通过/不通过"。每条命中要指出——在哪个决策、具体什么问题、应该怎么改。
 
@@ -428,7 +423,7 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 - 加载 [`references/anti-ai-signs.md`](references/anti-ai-signs.md) 作为依据
 - 评审输出**问题清单**（不落盘）
 - 拿到结论后**先按问题项修复**，再向用户汇报
-- **按重量裁剪**：中/重方案开 3 个并行 SubAgent；轻方案（单点改动）只开 1 个"可实现"视角、或由主 agent 直接对照 anti-ai-signs 自检即可，避免轻方案被过度评审
+- **按重量裁剪**：中/重方案开 3 个并行 SubAgent；轻方案（单点改动）只开 1 个"可实现"视角、或由主 agent 直接对照 anti-ai-signs 自检即可，避免轻方案被过度评审；无 SubAgent 能力的环境按 Phase 3.3 的降级规则处理
 
 ### 5.2 终审对照清单
 

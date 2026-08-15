@@ -2,11 +2,5 @@
   "name": "dev-doc",
   "version": "0.1.0",
   "category": "Documentation / Engineering",
-  "description": "通用技术方案写作 skill。借鉴 harness 工程思想，落地 6 层机制（上下文管理/工具系统/执行编排/状态记忆/评估观测/约束恢复）+ 重量分级（轻/中/重）+ 规范源复用 + 规范域动态发现。支持需求驱动扫描代码库、2-3 个 checkpoint（按重量分级:轻方案 2 个、中/重 3 个）、反 AI 味清单。产物为 Markdown 技术方案文档。",
-  "compat": [
-    "claude-code",
-    "codex-cli",
-    "gemini-cli",
-    "opencode"
-  ]
+  "description": "通用技术方案写作 skill。6 Phase 流程 + 重量分级（轻/中/重）+ 规范源复用 + 规范域动态发现。需求驱动扫描代码库、2-3 个 checkpoint（按重量分级）、反 AI 味清单。产物为 Markdown 技术方案文档。运行环境要求见 SKILL.md 的 compatibility 字段。"
 }
