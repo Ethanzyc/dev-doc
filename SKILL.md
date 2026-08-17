@@ -203,7 +203,7 @@ compatibility: 需支持 Agent Skills 的 CLI agent（Claude Code / Codex CLI / 
 
 探测结果决定**规范源模式**，写入 `plan.md`：
 
-- **命中 1-3 → 复用模式**：规范源 = 该目录（如 `.claude/rules/`）。本次任务的"规范域关联"指向规范源文件，**不另建 `dev-doc/conventions/`**。扫描中若发现"规范源没收录、但本项目确实在用"的新约定，作为**增量**补写到 `dev-doc/conventions/<domain>.md`，文件头标注"为 `<规范源>` 的增量补充，不覆盖源"。plan.md 声明：`规范源：.claude/rules/（复用）`。
+- **命中 1-3 → 复用模式**：规范源 = 该目录（如 `.claude/rules/`）。本次任务的"规范域关联"指向规范源文件，**不另建 `dev-doc/conventions/`**。扫描中若发现"规范源没收录、但本项目确实在用"的新约定（发现前先读 `dev-doc/conventions/` 下已有增量文件去重，已收录的不算新发现，防跨任务重复提取），作为**增量**补写到 `dev-doc/conventions/<domain>.md`，文件头标注"为 `<规范源>` 的增量补充，不覆盖源"；增量经用户确认后，提示用户可自行合并回规范源——合并与否由用户定，**agent 不代改规范源文件**，用户合并后可删对应增量文件（消除双源）。plan.md 声明：`规范源：.claude/rules/（复用）`。
 - **命中 4 → 从零模式**：规范源 = `dev-doc/conventions/`（本项目无现成约定，skill 来建）。走下方完整发现流程，写入 `dev-doc/conventions/<domain>.md`。plan.md 声明：`规范源：dev-doc/conventions/（从零）`。
 
 > **为什么先探测再发现**：复用模式直接拿现成约定，准且省力；从零模式才需 skill 推断。跳过探测 = 要么无视团队规范，要么和已有约定重复。
@@ -216,6 +216,7 @@ compatibility: 需支持 Agent Skills 的 CLI agent（Claude Code / Codex CLI / 
 2. 聚类成规范域（**不预设清单**，相似归一类、不重叠）
 3. 写入规范源对应位置（从零模式写 `dev-doc/conventions/<domain>.md`；复用模式的增量也写 `dev-doc/conventions/<domain>.md` 并标注增量，规范源文件本身不动）
 4. 集中展示给用户确认/修正
+5. （仅复用模式）增量确认后提示用户可自行合并回规范源；用户合并后可删对应增量文件
 
 **常见规范域提示**（只是提示，实际域由扫描结果决定）：命名 / 分层架构 / 接口 / SQL与数据模型 / 日志 / 异常处理 / 配置管理。
 
