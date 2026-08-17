@@ -43,7 +43,7 @@ skill 会在当前项目下创建 `dev-doc/` 目录承载产物：
             └── voucher-rule技术方案.md  # 最终产物
 ```
 
-> **conventions 是否产出看项目**：Phase 1 先探测项目是否已有约定源（`.claude/rules/` 等）。**有 → 复用，不另建 `dev-doc/conventions/`**（只把扫描到的新约定作增量补进去）；**无 → 从零累积到 `dev-doc/conventions/`**。
+> **conventions 是否产出看项目**：Phase 1 先探测项目是否已有约定源（`.claude/rules/` 等）。**有 → 复用，不另建 `dev-doc/conventions/`**（只把扫描到的新约定作增量补进去，确认后 skill 会建议你合并回规范源，合并后删增量，不越积越多）；**无 → 从零累积到 `dev-doc/conventions/`**。
 >
 > **建议**：把 `dev-doc/` 纳入 git。复用模式下约定源（如 `.claude/rules/`）天然团队共享；从零模式下 `dev-doc/conventions/` 越用越全。`dev-doc/tasks/<feature>/` 下的 requirement.md / plan.md 是过程产物，但保留可追溯决策。
 
