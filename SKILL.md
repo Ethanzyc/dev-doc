@@ -15,6 +15,7 @@ compatibility: 需支持 Agent Skills 的 CLI agent（Claude Code / Codex CLI / 
 - **规范域动态发现 + 规范源复用**：优先探测并复用项目已有约定源（`.claude/rules/` 等）；无源时从代码扫描推断、用户确认后累积
 - **反方案 AI 味清单**：终审逐条对照 10 条反模式
 - **需求对齐节点**：PRD 质量低时自动生成业务流程图；待确认项先做事实/决策分诊（能自己查的不问用户），再标依赖分轮询问；交互类需求可征询用户后生成低保真原型辅助对齐（需求自带原型不可信——图文矛盾/无法读取——时同样触发）
+- **评审版衍生**：主方案交付确认后生成面向技术评审的精简版（`<feature>技术方案-评审版.md`，8 节给人讲决策），主方案变更后自动整篇重生成；任务级可关闭（用户说"不要评审版"即关）
 
 ## ⚠️ 目录副作用告知（执行任何任务前向用户说明）
 
@@ -31,7 +32,8 @@ compatibility: 需支持 Agent Skills 的 CLI agent（Claude Code / Codex CLI / 
             ├── requirement.md    # 需求归一化
             ├── plan.md           # 决策记录（含规范源声明）
             ├── prototype.html    # 低保真原型（仅交互类需求对齐时产出，一次性工具非交付物）
-            └── <feature>技术方案.md  # 最终产物
+            ├── <feature>技术方案.md  # 最终产物（面向编码 AI，含完整契约）
+            └── <feature>技术方案-评审版.md  # 评审版（方案确认后生成，变更自动重生成；单向衍生不可手改）
 ```
 
 **规范源模式（conventions 是否产出看项目现状）**：Phase 1 先探测项目是否已有团队约定源——`.claude/rules/`、`docs/conventions/`、`CLAUDE.md` 规范段等。**有 → 复用为规范源，`dev-doc/conventions/` 不强制产出**（避免与已有约定重复打架）；扫描中发现"源里没收的新约定"才作为增量补到 `dev-doc/conventions/`。**无 → 规范源就是 `dev-doc/conventions/`，从零发现并累积。** 规则见 Phase 1.3。
@@ -49,6 +51,7 @@ compatibility: 需支持 Agent Skills 的 CLI agent（Claude Code / Codex CLI / 
    - 不存在 → 创建该目录，开始新任务
    - 存在 → 询问用户"继续这个任务还是新建"
      - 选「继续」→ 先读 `requirement.md` + `plan.md` 恢复上下文，按 plan.md 的"任务元信息-状态"和已落地的章节判断卡在哪个 Phase，从断点续做（不要从头重做）
+       - **评审版同步检测**：恢复上下文时检查任务目录是否存在 `*-技术方案-评审版.md`。存在且 plan.md 未记「评审版：关闭」→ 本次会话主方案任何变更落盘后，**立即按 [`references/review-doc.md`](references/review-doc.md) 整篇重生成**评审版并告知用户（变更已过确认，重生成是机械操作，不攒到 checkpoint）；plan.md 已记「评审版：关闭」→ 不生成；文件存在但 plan.md 无评审版记录（疑似用户手建）→ 询问用户采信现有文件还是按规则覆盖
        - 若 `plan.md` 尚不存在（中断发生在 Phase 0 / Phase 1 早期，plan.md 最早在 Phase 1 阶段 A 才创建）：`requirement.md` 存在且其待确认项已闭环 → 直接从 Phase 1 开始；否则从 Phase 0 开始
      - 选「新建」→ 换一个 feature 名重新建目录
 3. 后续所有产物都落在 `dev-doc/tasks/<feature>/` 下
@@ -283,6 +286,7 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 - 状态：进行中
 - 配方：<generic-medium / multi-task / greenfield>
 - 重量：<轻 / 中 / 重>
+- 评审版：<未生成 / 已生成 / 关闭>
 
 ## 影响范围（Phase 1 阶段 A 产出）
 - 模块：...
@@ -460,7 +464,13 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 - 局部修改 · 我会列出具体修哪里
 - 先停一停 · 我要再看看
 
-用户确认通过后，更新 `plan.md` 状态为"已完成"，任务结束。
+**评审版**（交付通过后独立询问；plan.md 已记「评审版：关闭」则跳过不问）：
+- 生成（推荐）· 按 [`references/review-doc.md`](references/review-doc.md) 从主方案生成面向技术评审的精简版
+- 不生成 · 在 plan.md 记「评审版：关闭」，本任务后续不再询问
+
+用户也可在激活 skill 时或任意时点直接说"不要评审版"——等价于选"不生成"，立即记入 plan.md（**任务级**生效，换任务仍会询问）。
+
+用户确认通过后：更新 `plan.md` 状态为"已完成"；若生成评审版，写 `<feature>技术方案-评审版.md`、plan.md 记「评审版：已生成」，并把评审版章节结构展示给用户过目（用户要调措辞 → 改主方案后重生成评审版，不直接编辑评审版）。任务结束。
 
 ---
 
@@ -505,5 +515,6 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 | Phase 4（每章）| 该章节关联的规范域 | 规范源对应文件（复用/从零模式见 1.3.0）|
 | Phase 4（图表章）| mermaid 规范 | [`mermaid-checklist.md`](references/mermaid-checklist.md) |
 | Phase 5 | 反 AI 味清单 + 终审视角 + mermaid 自检 | [`anti-ai-signs.md`](references/anti-ai-signs.md)、[`mermaid-checklist.md`](references/mermaid-checklist.md) |
+| Phase 5 交付后（评审版）| 评审版裁剪规则 | [`review-doc.md`](references/review-doc.md) |
 
 > **长会话里 agent 容易遗忘原则** —— Phase 4 会重复写 N 个章节，**每次开工前回看**所选配方 + `_backend-domain.md` + 当前章节关联的规范源。
