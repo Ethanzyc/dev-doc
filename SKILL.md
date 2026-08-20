@@ -51,7 +51,7 @@ compatibility: 需支持 Agent Skills 的 CLI agent（Claude Code / Codex CLI / 
    - 不存在 → 创建该目录，开始新任务
    - 存在 → 询问用户"继续这个任务还是新建"
      - 选「继续」→ 先读 `requirement.md` + `plan.md` 恢复上下文，按 plan.md 的"任务元信息-状态"和已落地的章节判断卡在哪个 Phase，从断点续做（不要从头重做）
-       - **评审版同步检测**：恢复上下文时检查任务目录是否存在 `*-技术方案-评审版.md`。存在且 plan.md 未记「评审版：关闭」→ 本次会话主方案任何变更落盘后，**立即按 [`references/review-doc.md`](references/review-doc.md) 整篇重生成**评审版并告知用户（变更已过确认，重生成是机械操作，不攒到 checkpoint）；plan.md 已记「评审版：关闭」→ 不生成；文件存在但 plan.md 无评审版记录（疑似用户手建）→ 询问用户采信现有文件还是按规则覆盖
+       - **评审版同步检测**：恢复上下文时检查任务目录是否存在 `*-技术方案-评审版.md`。存在且 plan.md 记「评审版：已生成」→ 本次会话主方案任何变更落盘后，**立即按 [`references/review-doc.md`](references/review-doc.md) 整篇重生成**评审版并告知用户（变更已过确认，重生成是机械操作，不攒到 checkpoint）；plan.md 已记「评审版：关闭」→ 不生成；文件存在但 plan.md 无评审版记录（疑似用户手建）→ 询问用户采信现有文件还是按规则覆盖；plan.md 记「已生成」但评审版文件缺失 → 视同未生成，询问用户是否重新生成
        - 若 `plan.md` 尚不存在（中断发生在 Phase 0 / Phase 1 早期，plan.md 最早在 Phase 1 阶段 A 才创建）：`requirement.md` 存在且其待确认项已闭环 → 直接从 Phase 1 开始；否则从 Phase 0 开始
      - 选「新建」→ 换一个 feature 名重新建目录
 3. 后续所有产物都落在 `dev-doc/tasks/<feature>/` 下
@@ -468,9 +468,9 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 - 生成（推荐）· 按 [`references/review-doc.md`](references/review-doc.md) 从主方案生成面向技术评审的精简版
 - 不生成 · 在 plan.md 记「评审版：关闭」，本任务后续不再询问
 
-用户也可在激活 skill 时或任意时点直接说"不要评审版"——等价于选"不生成"，立即记入 plan.md（**任务级**生效，换任务仍会询问）。
+用户也可在激活 skill 时或任意时点直接说"不要评审版"——等价于选"不生成"，立即记入 plan.md（**任务级**生效，换任务仍会询问）。若关闭时评审版文件已存在，询问用户删除还是保留——保留则在其文件头追加「已停更」标注并不再同步。
 
-用户确认通过后：更新 `plan.md` 状态为"已完成"；若生成评审版，写 `<feature>技术方案-评审版.md`、plan.md 记「评审版：已生成」，并把评审版章节结构展示给用户过目（用户要调措辞 → 改主方案后重生成评审版，不直接编辑评审版）。任务结束。
+用户确认通过后：更新 `plan.md` 状态为"已完成"；若生成评审版，写 `<feature>技术方案-评审版.md`、plan.md 记「评审版：已生成」，并把评审版章节结构展示给用户过目（用户要调措辞 → 改主方案后重生成评审版，不直接编辑评审版）。任务结束（此后主方案任何变更——本会话或恢复会话——都触发评审版整篇重生成）。
 
 ---
 
@@ -515,6 +515,6 @@ Phase 0 的 `requirement.md` 有"数据量线索"字段，但**代码扫描得�
 | Phase 4（每章）| 该章节关联的规范域 | 规范源对应文件（复用/从零模式见 1.3.0）|
 | Phase 4（图表章）| mermaid 规范 | [`mermaid-checklist.md`](references/mermaid-checklist.md) |
 | Phase 5 | 反 AI 味清单 + 终审视角 + mermaid 自检 | [`anti-ai-signs.md`](references/anti-ai-signs.md)、[`mermaid-checklist.md`](references/mermaid-checklist.md) |
-| Phase 5 交付后（评审版）| 评审版裁剪规则 | [`review-doc.md`](references/review-doc.md) |
+| Phase 5 交付后 / 任务恢复同步评审版时 | 评审版裁剪规则 | [`review-doc.md`](references/review-doc.md) |
 
 > **长会话里 agent 容易遗忘原则** —— Phase 4 会重复写 N 个章节，**每次开工前回看**所选配方 + `_backend-domain.md` + 当前章节关联的规范源。
